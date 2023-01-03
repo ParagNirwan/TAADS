@@ -1,21 +1,21 @@
 package com.team9.taads.api;
 
-import com.team9.taads.configuration.PDFConfig;
+
 import com.team9.taads.service.PDFService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.FileNotFoundException;
 
 
 @RestController
 public class PDFController {
 
     private final PDFService pdfService;
-    private final PDFConfig pdfConfig;
-    @Autowired
-    public PDFController(PDFService pdfService, PDFConfig pdfConfig){
+
+    public PDFController(PDFService pdfService) {
         this.pdfService = pdfService;
-        this.pdfConfig = pdfConfig;
     }
+
 
     @PostMapping
     @RequestMapping(path="/")
@@ -31,9 +31,9 @@ public class PDFController {
 
 
     @GetMapping
-    @RequestMapping(path="/mcw/{id}")
-    public String mcw(@PathVariable("id") Long id){
-        return pdfService.mcw(id);
+    @RequestMapping(path="/module={id}")
+    public String mcw(@PathVariable("id") Long id) throws FileNotFoundException {
+        return pdfService.getModules(id);
     }
 
 
