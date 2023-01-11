@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 public class PDFController {
 
     private final PDFService pdfService;

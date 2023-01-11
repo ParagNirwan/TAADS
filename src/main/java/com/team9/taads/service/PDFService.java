@@ -5,10 +5,8 @@ import com.team9.taads.dao.PdfDAO;
 import com.team9.taads.entity.PDFEntity;
 import com.team9.taads.repository.PDFRepository;
 import opennlp.tools.lemmatizer.DictionaryLemmatizer;
-import opennlp.tools.ngram.NGramModel;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.util.StringList;
 import org.apache.commons.math3.stat.Frequency;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
@@ -25,7 +23,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import static com.team9.taads.dao.PdfTextAccessService.pdfText;
 
@@ -41,10 +38,23 @@ public class PDFService {
 
     }
 
+    //The NGram Code.
+    public static List<String> generateNGrams(int n, String str) {
+        List<String> ngrams = new ArrayList<>();
+        String[] words = str.split(" ");
+        for (int i = 0; i < words.length - n + 1; i++) {
+            StringBuilder sb = new StringBuilder();
+            for (int j = i; j < i + n; j++) {
+                sb.append((j > i ? " " : "") + words[j]);
+            }
+            ngrams.add(sb.toString());
+        }
+        return ngrams;
+    }
+
     public String allText() {
         return pdfRepository.findAll().toString();
     }
-
 
     public void addText() {
         String pdfTextMain;
@@ -89,11 +99,10 @@ public class PDFService {
 
 
         String textToAnalyze = String.valueOf(pdfRepository.findById(id));
-        String textToAnalyze2 = textToAnalyze.substring(textToAnalyze.indexOf("Module Contents")+16, textToAnalyze.indexOf("Teaching"));
+        String textToAnalyze2 = textToAnalyze.substring(textToAnalyze.indexOf("Module Contents") + 16, textToAnalyze.indexOf("Teaching"));
 
 
-
-
+//Stop Words Remove
         CharArraySet stopWords = EnglishAnalyzer.getDefaultStopSet();
         ArrayList<String> remaining = new ArrayList<>();
         ArrayList<String> remaining2 = new ArrayList<>();
@@ -115,39 +124,41 @@ public class PDFService {
             throw new RuntimeException(e);
         }
 
+
+        System.out.println(remaining);
+
+
+
         String[] remainingArray = remaining.toArray(new String[0]);
         List<String> lemmatisedWords = new ArrayList<>();
 
 
-
-
         //Lemmatisation
-        try{
-            InputStream posModelIn = new FileInputStream("E:\\project resources\\en-pos-maxent.bin");
+        try {
+            InputStream posModelIn = new FileInputStream("E:\\taads\\project resources\\en-pos-maxent.bin");
             // loading the parts-of-speech model from stream
             POSModel posModel = new POSModel(posModelIn);
             // initializing the parts-of-speech tagger with model
             POSTaggerME posTagger = new POSTaggerME(posModel);
             // Tagger tagging the tokens
-            String tags[] = posTagger.tag(remainingArray);
+            String[] tags = posTagger.tag(remainingArray);
 
             // loading the dictionary to input stream
-            InputStream dictLemmatizer = new FileInputStream("E:\\project resources\\en-lemmatizer.dict.txt");
+            InputStream dictLemmatizer = new FileInputStream("E:\\taads\\project resources\\en-lemmatizer.dict.txt");
             // loading the lemmatizer with dictionary
             DictionaryLemmatizer lemmatizer = new DictionaryLemmatizer(dictLemmatizer);
 
             // finding the lemmas
             String[] lemmas = lemmatizer.lemmatize(remainingArray, tags);
 
-            for(int i=0;i< remainingArray.length;i++){
-                System.out.println(remainingArray[i]+" -"+tags[i]+" : "+lemmas[i]);
+            for (int i = 0; i < remainingArray.length; i++) {
+                System.out.println(remainingArray[i] + " -" + tags[i] + " : " + lemmas[i]);
             }
 
-            for(int i=0;i< remainingArray.length;i++){
-                if(lemmas[i].equals("0")){
+            for (int i = 0; i < remainingArray.length; i++) {
+                if (lemmas[i].equals("0")) {
                     lemmatisedWords.add(lemmas[i]);
-                }
-                else {
+                } else {
                     lemmatisedWords.add(remainingArray[i]);
                 }
             }
@@ -160,10 +171,19 @@ public class PDFService {
 
 
 
+        //putting lemmatised words in a string.
+        String lemmaplusstop ="";
+        for(int i=0; i< lemmatisedWords.size(); i++){
+            lemmaplusstop += lemmatisedWords.get(i)+" ";
+        }
+
+        System.out.println(lemmaplusstop);
+
+
         //Getting N Grams because I can't get nevermind.
-        List<String> unigrams = generateNGrams(1,textToAnalyze2);
-        List<String> bigrams = generateNGrams(2,textToAnalyze2);
-        List<String> trigrams = generateNGrams(3,textToAnalyze2);
+        List<String> unigrams = generateNGrams(1, lemmaplusstop);
+        List<String> bigrams = generateNGrams(2, lemmaplusstop);
+        List<String> trigrams = generateNGrams(3, lemmaplusstop);
         System.out.println("************UNIGRAMS*********** \n ************UNIGRAMS*********** \n************UNIGRAMS*********** ");
         System.out.println(unigrams);
         System.out.println("************BIGRAMS*********** \n ************BIGRAMS*********** \n************BIGRAMS*********** ");
@@ -199,24 +219,8 @@ public class PDFService {
         }
 
 
-
-
         return textToAnalyze2 + mostRelevant2;
 
-    }
-
-    //The NGram Code.
-    public static List<String> generateNGrams(int n, String str) {
-        List<String> ngrams = new ArrayList<>();
-        String[] words = str.split(" ");
-        for (int i = 0; i < words.length - n + 1; i++) {
-            StringBuilder sb = new StringBuilder();
-            for (int j = i; j < i + n; j++) {
-                sb.append((j > i ? " " : "") + words[j]);
-            }
-            ngrams.add(sb.toString());
-        }
-        return ngrams;
     }
 
 }
