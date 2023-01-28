@@ -5,6 +5,7 @@ import com.team9.taads.service.PDFService;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 
 @RestController
@@ -33,7 +34,7 @@ public class PDFController {
 
     @GetMapping
     @RequestMapping(path="/module={id}")
-    public String mcw(@PathVariable("id") Long id) throws FileNotFoundException {
+    public String mcw(@PathVariable("id") Long id) throws IOException {
         return pdfService.getModules(id);
     }
 
